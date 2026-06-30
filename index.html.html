@@ -1,0 +1,909 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Catalogue Fournisseurs — Leet Design</title>
+<style>
+:root{
+  --navy:#0f2a45;--navy2:#1a3a5c;--navy3:#2a5080;
+  --gold:#c9a84c;--gold2:#e8c96a;
+  --bg:#f4f3ef;--surface:#fff;--surface2:#f0efe9;--surface3:#e8e6de;
+  --border:#dddbd0;--border2:#c8c5b8;
+  --text:#1a1917;--text2:#55524a;--text3:#9a9780;
+  --green:#1a6640;--green-bg:#e6f4ed;
+  --amber:#7a5000;--amber-bg:#fef3dc;
+  --red:#8b1e1e;--red-bg:#fceaea;
+  --blue:#1a3a5c;--blue-bg:#e8f0f8;
+  --r:10px;--r2:14px;
+  --shadow:0 1px 3px rgba(0,0,0,.07),0 4px 16px rgba(0,0,0,.05);
+  --shadow2:0 8px 40px rgba(0,0,0,.14);
+}
+*{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:var(--bg);color:var(--text);font-size:15px;line-height:1.6;min-height:100vh}
+
+/* ── HEADER ── */
+.header{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 60%,var(--navy3) 100%);padding:0 2rem;display:flex;align-items:center;gap:0;height:64px;position:sticky;top:0;z-index:50;box-shadow:0 2px 16px rgba(0,0,0,.2)}
+.header-logo{display:flex;align-items:center;gap:12px;text-decoration:none}
+.logo-box{width:38px;height:38px;background:var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center;font-weight:800;font-size:14px;color:var(--navy);letter-spacing:.5px;flex-shrink:0}
+.header-title{color:#fff;font-size:17px;font-weight:600;letter-spacing:.2px}
+.header-sub{color:rgba(255,255,255,.5);font-size:12px;margin-top:1px}
+.header-actions{margin-left:auto;display:flex;gap:8px;align-items:center}
+.btn-export{height:34px;padding:0 14px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font-size:13px;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .15s;white-space:nowrap}
+.btn-export:hover{background:rgba(255,255,255,.2)}
+.btn-add-header{height:34px;padding:0 14px;border-radius:8px;border:none;background:var(--gold);color:var(--navy);font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .15s;white-space:nowrap}
+.btn-add-header:hover{background:var(--gold2)}
+.sync-status{display:flex;align-items:center;gap:6px;font-size:12px;color:rgba(255,255,255,.75);padding:0 4px;white-space:nowrap}
+.sync-dot{width:7px;height:7px;border-radius:50%;background:#8a8a8a;flex-shrink:0}
+.sync-loading .sync-dot{background:#e8c96a;animation:pulse 1s infinite}
+.sync-ok .sync-dot{background:#4ade80}
+.sync-error .sync-dot{background:#f06262}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
+.config-banner{background:var(--amber-bg);border:1px solid #f0d896;border-radius:var(--r);padding:1rem 1.25rem;margin-bottom:1.25rem;font-size:13.5px;color:var(--amber);line-height:1.6}
+.config-banner code{background:rgba(0,0,0,.06);padding:1px 6px;border-radius:4px;font-size:12px}
+.saving-pill{position:fixed;bottom:1.5rem;left:1.5rem;background:var(--navy);color:#fff;padding:8px 14px;border-radius:20px;font-size:12px;display:none;align-items:center;gap:8px;z-index:998;box-shadow:var(--shadow2)}
+.saving-pill.show{display:flex}
+.spinner{width:12px;height:12px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.skeleton-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:1rem 1.15rem;height:172px}
+.skeleton-line{background:linear-gradient(90deg,var(--surface2) 25%,var(--surface3) 37%,var(--surface2) 63%);background-size:400% 100%;animation:shimmer 1.4s infinite;border-radius:4px}
+@keyframes shimmer{0%{background-position:100% 0}100%{background-position:-100% 0}}
+
+/* ── MAIN ── */
+.main{max-width:1280px;margin:0 auto;padding:1.5rem 1.5rem 3rem}
+
+/* ── STATS ── */
+.stats{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:1.5rem}
+.stat{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.8rem 1rem;display:flex;flex-direction:column}
+.stat-label{font-size:11px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:2px}
+.stat-val{font-size:22px;font-weight:700;color:var(--text)}
+.stat-sub{font-size:11px;color:var(--text3);margin-top:1px}
+
+/* ── TOOLBAR ── */
+.toolbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-bottom:1rem}
+.search-wrap{flex:1;min-width:220px;position:relative}
+.search-wrap svg{position:absolute;left:11px;top:50%;transform:translateY(-50%);color:var(--text3);width:15px;height:15px;pointer-events:none}
+input[type=text],select,textarea{font-family:inherit;font-size:14px;color:var(--text);border:1px solid var(--border);border-radius:8px;background:var(--surface);outline:none;transition:border-color .15s,box-shadow .15s}
+input[type=text]:focus,select:focus,textarea:focus{border-color:var(--navy2);box-shadow:0 0 0 3px rgba(26,58,92,.1)}
+.search-wrap input{width:100%;height:38px;padding:0 36px 0 34px}
+.search-clear{position:absolute;right:10px;top:50%;transform:translateY(-50%);background:none;border:none;color:var(--text3);cursor:pointer;padding:2px;display:none;align-items:center}
+.search-clear.visible{display:flex}
+select{height:38px;padding:0 12px;cursor:pointer}
+.view-toggle{display:flex;border:1px solid var(--border);border-radius:8px;overflow:hidden;background:var(--surface)}
+.view-btn{width:36px;height:36px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text3);transition:background .12s,color .12s}
+.view-btn.active{background:var(--navy2);color:#fff}
+.view-btn svg{width:16px;height:16px}
+
+/* ── CHIPS ── */
+.chips-wrap{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:1.25rem;align-items:center}
+.chips-label{font-size:12px;font-weight:600;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.chip{font-size:12px;padding:4px 12px;border-radius:20px;border:1px solid var(--border);background:var(--surface);color:var(--text2);cursor:pointer;transition:all .12s;white-space:nowrap}
+.chip:hover{border-color:var(--border2)}
+.chip.active{background:var(--navy2);color:#fff;border-color:var(--navy2)}
+
+/* ── GRID ── */
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:12px}
+.list-view .grid{grid-template-columns:1fr}
+.list-view .card{display:flex;align-items:center;gap:14px;padding:.75rem 1.1rem}
+.list-view .card-body{flex:1;min-width:0;display:flex;align-items:center;gap:16px;flex-wrap:wrap}
+.list-view .card-head{margin-bottom:0;flex-shrink:0}
+.list-view .card-info{min-width:160px}
+.list-view .card-rows{display:flex;flex-direction:row;gap:14px;flex:1;flex-wrap:wrap;margin:0}
+.list-view .card-footer{border-top:none;padding-top:0;margin-top:0;margin-left:auto;flex-shrink:0}
+
+/* ── CARD ── */
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--r2);padding:1rem 1.15rem;cursor:pointer;transition:box-shadow .15s,border-color .15s,transform .1s;position:relative}
+.card:hover{box-shadow:var(--shadow);border-color:var(--border2);transform:translateY(-1px)}
+.card-pin{position:absolute;top:10px;right:10px;width:22px;height:22px;border-radius:6px;background:none;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text3);opacity:0;transition:opacity .15s}
+.card:hover .card-pin{opacity:1}
+.card-pin.pinned,.card-pin.pinned:hover{opacity:1;color:var(--gold)}
+.card-head{display:flex;align-items:flex-start;gap:10px;margin-bottom:10px}
+.avatar{width:42px;height:42px;border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;letter-spacing:.5px}
+.card-info{flex:1;min-width:0}
+.card-name{font-size:14px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:.1px}
+.card-cat{font-size:11px;color:var(--text3);margin-top:1px}
+.badge{font-size:10px;padding:2px 8px;border-radius:12px;font-weight:700;white-space:nowrap;flex-shrink:0;letter-spacing:.03em;text-transform:uppercase}
+.badge-green{background:var(--green-bg);color:var(--green)}
+.badge-amber{background:var(--amber-bg);color:var(--amber)}
+.badge-red{background:var(--red-bg);color:var(--red)}
+.badge-blue{background:var(--blue-bg);color:var(--blue)}
+.card-rows{display:flex;flex-direction:column;gap:5px;margin-bottom:10px}
+.card-row{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text2);line-height:1.3;min-width:0}
+.card-row svg{width:13px;height:13px;color:var(--text3);flex-shrink:0}
+.card-row a{color:var(--navy2);text-decoration:none;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card-row a:hover{text-decoration:underline}
+.card-row span{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.card-footer{display:flex;align-items:center;justify-content:space-between;border-top:1px solid var(--border);padding-top:8px;margin-top:4px;gap:8px}
+.tags{display:flex;gap:5px;flex-wrap:wrap;flex:1}
+.tag{font-size:10px;padding:2px 7px;border-radius:10px;background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+.stars-row{display:flex;align-items:center;gap:3px;flex-shrink:0}
+.star-btn{background:none;border:none;cursor:pointer;font-size:15px;color:#ddd;line-height:1;padding:0;transition:color .1s,transform .1s}
+.star-btn:hover,.star-btn.on{color:#d4920a}
+.star-btn:hover{transform:scale(1.2)}
+
+/* ── EMPTY ── */
+.empty{grid-column:1/-1;text-align:center;padding:4rem 1rem;color:var(--text3)}
+.empty svg{width:48px;height:48px;margin:0 auto 14px;display:block;opacity:.3}
+.empty p{font-size:15px}
+
+/* ── MODAL OVERLAY ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(10,20,35,.55);z-index:200;backdrop-filter:blur(2px)}
+.overlay.open{display:flex;align-items:flex-start;justify-content:center;padding:2rem 1rem;overflow-y:auto}
+.modal{background:var(--surface);border-radius:18px;width:100%;max-width:600px;box-shadow:var(--shadow2);position:relative;overflow:hidden}
+.modal-banner{height:6px;background:linear-gradient(90deg,var(--navy),var(--navy3),var(--gold))}
+.modal-body{padding:1.5rem}
+.modal-close{position:absolute;top:1rem;right:1rem;width:32px;height:32px;border-radius:8px;background:var(--surface2);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text2);transition:background .12s}
+.modal-close:hover{background:var(--border)}
+.modal-head{display:flex;align-items:center;gap:14px;margin-bottom:1.25rem}
+.modal-avatar{width:56px;height:56px;border-radius:11px;display:flex;align-items:center;justify-content:center;font-size:20px;font-weight:800;flex-shrink:0}
+.modal-name{font-size:20px;font-weight:800;letter-spacing:.1px}
+.modal-sub{font-size:13px;color:var(--text3);margin-top:3px;display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+.section-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.07em;margin:1.1rem 0 8px;display:flex;align-items:center;gap:6px}
+.section-title::after{content:'';flex:1;height:1px;background:var(--border)}
+.detail-list{display:flex;flex-direction:column}
+.detail-row{display:flex;align-items:flex-start;gap:10px;padding:8px 0;border-bottom:1px solid var(--border);font-size:14px}
+.detail-row:last-child{border-bottom:none}
+.detail-row svg{width:15px;height:15px;color:var(--text3);flex-shrink:0;margin-top:2px}
+.detail-key{color:var(--text3);width:130px;flex-shrink:0;font-size:13px}
+.detail-val{color:var(--text);flex:1;word-break:break-word}
+.detail-val a{color:var(--navy2);text-decoration:none}
+.detail-val a:hover{text-decoration:underline}
+.stars-edit{display:flex;gap:4px;align-items:center}
+.star-edit{font-size:22px;cursor:pointer;color:#ddd;transition:color .1s,transform .1s;background:none;border:none;padding:0}
+.star-edit:hover,.star-edit.on{color:#d4920a}
+.star-edit:hover{transform:scale(1.15)}
+.comment-box{width:100%;min-height:70px;padding:8px 10px;border:1px solid var(--border);border-radius:8px;resize:vertical;font-size:13px;color:var(--text);background:var(--surface2)}
+.modal-actions{display:flex;gap:10px;margin-top:1.25rem;padding-top:1.1rem;border-top:1px solid var(--border)}
+.btn{height:38px;padding:0 16px;border-radius:8px;font-size:14px;font-weight:500;cursor:pointer;display:inline-flex;align-items:center;gap:7px;transition:all .15s;white-space:nowrap;font-family:inherit}
+.btn-primary{background:var(--navy2);color:#fff;border:1px solid var(--navy2)}
+.btn-primary:hover{background:var(--navy)}
+.btn-danger{background:var(--red-bg);color:var(--red);border:1px solid var(--red-bg)}
+.btn-danger:hover{background:#f5d0d0}
+.btn-ghost{background:var(--surface2);color:var(--text2);border:1px solid var(--border)}
+.btn-ghost:hover{background:var(--border);border-color:var(--border2)}
+.btn-gold{background:var(--gold);color:var(--navy);border:none;font-weight:700}
+.btn-gold:hover{background:var(--gold2)}
+.ml-auto{margin-left:auto}
+
+/* ── ADD/EDIT FORM ── */
+.form-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px 14px}
+.form-full{grid-column:1/-1}
+.form-group{display:flex;flex-direction:column;gap:5px}
+.form-label{font-size:12px;font-weight:600;color:var(--text2)}
+.form-label span{color:var(--red);margin-left:2px}
+.form-input{height:38px;padding:0 10px;width:100%}
+.form-select{height:38px;padding:0 10px;width:100%}
+.form-textarea{width:100%;padding:8px 10px;min-height:60px;resize:vertical}
+.tag-input-wrap{display:flex;gap:6px;flex-wrap:wrap;padding:6px 8px;border:1px solid var(--border);border-radius:8px;background:var(--surface);min-height:38px;cursor:text;align-items:center}
+.tag-input-wrap:focus-within{border-color:var(--navy2);box-shadow:0 0 0 3px rgba(26,58,92,.1)}
+.tag-input-wrap .tag{cursor:pointer}
+.tag-input-wrap .tag:hover{background:var(--red-bg);color:var(--red);border-color:var(--red-bg)}
+.tag-input{border:none;outline:none;background:none;font-size:13px;color:var(--text);min-width:80px;flex:1}
+
+/* ── TOAST ── */
+.toast-wrap{position:fixed;bottom:1.5rem;right:1.5rem;z-index:999;display:flex;flex-direction:column;gap:8px;align-items:flex-end}
+.toast{background:var(--navy);color:#fff;padding:10px 16px;border-radius:10px;font-size:13px;font-weight:500;box-shadow:var(--shadow2);display:flex;align-items:center;gap:8px;animation:slideIn .2s ease;border-left:3px solid var(--gold)}
+.toast.error{background:#4a1010;border-left-color:#e05555}
+.toast.success{background:#0a3320;border-left-color:var(--green)}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+
+/* ── CONFIRM MODAL ── */
+.confirm-box{background:var(--surface);border-radius:14px;padding:1.5rem;max-width:380px;width:100%;box-shadow:var(--shadow2)}
+.confirm-title{font-size:17px;font-weight:700;margin-bottom:8px}
+.confirm-msg{font-size:14px;color:var(--text2);margin-bottom:1.25rem;line-height:1.6}
+.confirm-actions{display:flex;gap:8px;justify-content:flex-end}
+
+/* ── RESPONSIVE ── */
+@media(max-width:720px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .header{padding:0 1rem}
+  .header-title{display:none}
+  .main{padding:1rem}
+  .form-grid{grid-template-columns:1fr}
+  .form-full{grid-column:1}
+  .modal-actions{flex-wrap:wrap}
+}
+@media(max-width:480px){
+  .stats{grid-template-columns:repeat(2,1fr)}
+  .header-sub{display:none}
+}
+</style>
+</head>
+<body>
+
+<header class="header">
+  <div class="header-logo">
+    <div class="logo-box">LD</div>
+    <div>
+      <div class="header-title">Catalogue Fournisseurs</div>
+      <div class="header-sub">Leet Design — usage interne</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <span id="sync-status" class="sync-status sync-loading">
+      <span class="sync-dot"></span><span class="sync-label">Connexion…</span>
+    </span>
+    <button class="btn-export" onclick="manualRefresh()" title="Rafraîchir les données">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14"><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/></svg>
+    </button>
+    <button class="btn-add-header" onclick="openAdd()">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" width="14" height="14"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+      Nouveau fournisseur
+    </button>
+  </div>
+</header>
+
+<main class="main">
+  <div id="config-banner-wrap"></div>
+  <div class="stats" id="stats"></div>
+
+  <div class="toolbar">
+    <div class="search-wrap">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+      <input type="text" id="search" placeholder="Rechercher nom, contact, email, pays…" oninput="onSearch(this)">
+      <button class="search-clear" id="search-clear" onclick="clearSearch()" aria-label="Effacer">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="13" height="13"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <select id="sort" onchange="render()">
+      <option value="nom">A → Z</option>
+      <option value="note">Mieux notés</option>
+      <option value="pays">Par pays</option>
+      <option value="delai">Délai croissant</option>
+      <option value="pinned">Épinglés d'abord</option>
+    </select>
+    <select id="filtre-statut" onchange="render()">
+      <option value="">Tous les statuts</option>
+      <option value="Actif">Actif</option>
+      <option value="En révision">En révision</option>
+      <option value="Inactif">Inactif</option>
+    </select>
+    <div class="view-toggle">
+      <button class="view-btn active" id="btn-grid" onclick="setView('grid')" title="Grille">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+      </button>
+      <button class="view-btn" id="btn-list" onclick="setView('list')" title="Liste">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/><line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/><line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <div class="chips-wrap">
+    <span class="chips-label">Pays :</span>
+    <div id="chips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
+  </div>
+
+  <div id="container">
+    <div class="grid" id="grid"></div>
+  </div>
+</main>
+
+<!-- Detail / Edit modal -->
+<div class="overlay" id="overlay" onclick="onOverlayClick(event)">
+  <div class="modal" id="modal">
+    <div class="modal-banner"></div>
+    <div class="modal-body" id="modal-body"></div>
+  </div>
+</div>
+
+<!-- Confirm modal -->
+<div class="overlay" id="confirm-overlay">
+  <div class="confirm-box" id="confirm-box">
+    <div class="confirm-title" id="confirm-title">Confirmation</div>
+    <div class="confirm-msg" id="confirm-msg"></div>
+    <div class="confirm-actions">
+      <button class="btn btn-ghost" onclick="closeConfirm()">Annuler</button>
+      <button class="btn btn-danger" id="confirm-ok">Supprimer</button>
+    </div>
+  </div>
+</div>
+
+<!-- Saving pill -->
+<div class="saving-pill" id="saving-pill"><div class="spinner"></div><span>Synchronisation…</span></div>
+
+<!-- Toast -->
+<div class="toast-wrap" id="toasts"></div>
+
+<script>
+/* ═══════════════════════════════════════════════════
+   DONNÉES — 89 fournisseurs importés depuis le fichier Excel
+   ═══════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════
+   CONNEXION GOOGLE SHEETS — à configurer une seule fois
+   ═══════════════════════════════════════════════════
+   1. Suivez les instructions du fichier "apps-script-catalogue-fournisseurs.gs"
+   2. Collez ci-dessous l'URL obtenue après déploiement (se termine par /exec)
+*/
+const API_URL = "https://script.google.com/macros/s/AKfycbx58XG3pg4KIv9W04U8n3CbpblvlzPpU9s9VPLc7ff7UtbDPdLuDcN-7y3NTkayETd-/exec";
+
+/* ═══ STATE ═══ */
+let DB = [];
+let pinned = new Set();
+let currentView = 'grid';
+let activeCountry = '';
+let editingNote = 0;
+let editingTags = [];
+let nextId = 1;
+let isConfigured = /^https:\/\/script\.google\.com\/macros\/s\/.+\/exec$/.test(API_URL.trim());
+let isLoading = true;
+/* ═══ PALETTE AVATARS ═══ */
+const PAL=[
+  {bg:'#dde8f5',c:'#0f2a45'},{bg:'#dff2ea',c:'#0a3520'},
+  {bg:'#ede8fb',c:'#3b2a90'},{bg:'#fde8e0',c:'#7a2c10'},
+  {bg:'#fff0d2',c:'#7a5000'},{bg:'#e0f4f2',c:'#0a4040'},
+  {bg:'#fde0ec',c:'#7a1040'},{bg:'#eeeae4',c:'#3a3828'},
+  {bg:'#e8f5dd',c:'#1a5010'},{bg:'#f5e8dd',c:'#5a3010'},
+];
+function pal(n){let h=[...n].reduce((a,c)=>a+c.charCodeAt(0),0);return PAL[h%PAL.length]}
+function ini(n){return n.split(/[\s&+]+/).map(w=>w[0]||'').join('').slice(0,2).toUpperCase()}
+
+/* ═══ HELPERS ═══ */
+const ico={
+  user:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 3.6-7 8-7s8 3 8 7"/></svg>`,
+  mail:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"/><polyline points="2,4 12,13 22,4"/></svg>`,
+  phone:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 16.92v3a2 2 0 01-2.18 2 19.79 19.79 0 01-8.63-3.07A19.5 19.5 0 013.07 9.81a19.79 19.79 0 01-3.07-8.67A2 2 0 011.72 1h3a2 2 0 012 1.72c.127.96.361 1.903.7 2.81a2 2 0 01-.45 2.11L5.7 8.91a16 16 0 006.29 6.29l1.27-1.27a2 2 0 012.11-.45c.907.339 1.85.573 2.81.7A2 2 0 0122 16.92z"/></svg>`,
+  globe:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="2" y1="12" x2="22" y2="12"/><path d="M12 2a15.3 15.3 0 014 10 15.3 15.3 0 01-4 10 15.3 15.3 0 01-4-10 15.3 15.3 0 014-10z"/></svg>`,
+  pin:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 10c0 7-9 13-9 13S3 17 3 10a9 9 0 0118 0z"/><circle cx="12" cy="10" r="3"/></svg>`,
+  clock:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12,6 12,12 16,14"/></svg>`,
+  coin:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 015.83 1c0 2-3 3-3 3M12 17h.01"/></svg>`,
+  doc:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14,2 14,8 20,8"/></svg>`,
+  star:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12,2 15.09,8.26 22,9.27 17,14.14 18.18,21.02 12,17.77 5.82,21.02 7,14.14 2,9.27 8.91,8.26"/></svg>`,
+  tag:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20.59 13.41l-7.17 7.17a2 2 0 01-2.83 0L2 12V2h10l8.59 8.59a2 2 0 010 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/></svg>`,
+  x:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>`,
+  edit:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7M18.5 2.5a2.121 2.121 0 013 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>`,
+  trash:`<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3,6 5,6 21,6"/><path d="M19 6l-1 14a2 2 0 01-2 2H8a2 2 0 01-2-2L5 6M10 11v6M14 11v6M9 6V4a1 1 0 011-1h4a1 1 0 011 1v2"/></svg>`,
+  pin2:`<svg viewBox="0 0 24 24" fill="currentColor" width="13" height="13"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"/></svg>`,
+};
+
+function badge(s){
+  const map={Actif:['badge-green','Actif'],'En révision':['badge-amber','En révision'],Inactif:['badge-red','Inactif']};
+  const [cl,lb]=map[s]||['badge-blue',s];
+  return `<span class="badge ${cl}">${lb}</span>`;
+}
+function starsDisplay(n){if(!n)return'<span style="color:var(--text3);font-size:12px">Non noté</span>';let s='';for(let i=1;i<=5;i++)s+=`<span style="color:${i<=n?'#d4920a':'#ddd'}">★</span>`;return s+` <span style="font-size:12px;color:var(--text3)">${n}/5</span>`}
+function domain(url){if(!url)return'';return url.replace(/^https?:\/\/(www\.)?/,'').split('/')[0]}
+
+/* ═══ FILTRAGE & TRI ═══ */
+function getFiltered(){
+  const q=document.getElementById('search').value.toLowerCase().trim();
+  const srt=document.getElementById('sort').value;
+  const st=document.getElementById('filtre-statut').value;
+  let list=DB.filter(f=>{
+    const mC=!activeCountry||f.pays===activeCountry;
+    const mS=!st||f.statut===st;
+    const mQ=!q||[f.nom,f.contact,f.email,f.tel,f.pays,f.categorie,f.paiement,...(f.tags||[])].some(x=>(x||'').toLowerCase().includes(q));
+    return mC&&mS&&mQ;
+  });
+  if(srt==='nom')list.sort((a,b)=>a.nom.localeCompare(b.nom));
+  else if(srt==='note')list.sort((a,b)=>(b.note||0)-(a.note||0)||a.nom.localeCompare(b.nom));
+  else if(srt==='pays')list.sort((a,b)=>(a.pays||'').localeCompare(b.pays||'')||a.nom.localeCompare(b.nom));
+  else if(srt==='delai')list.sort((a,b)=>(a.delai||9999)-(b.delai||9999));
+  else if(srt==='pinned')list.sort((a,b)=>(pinned.has(b.id)?1:0)-(pinned.has(a.id)?1:0)||a.nom.localeCompare(b.nom));
+  return list;
+}
+
+/* ═══ RENDER STATS ═══ */
+function renderStats(list){
+  const total=DB.length;
+  const actifs=DB.filter(f=>f.statut==='Actif').length;
+  const noted=DB.filter(f=>f.note>0);
+  const avg=noted.length?(noted.reduce((a,f)=>a+f.note,0)/noted.length).toFixed(1):'—';
+  const pays=[...new Set(DB.filter(f=>f.pays).map(f=>f.pays))].length;
+  document.getElementById('stats').innerHTML=`
+    <div class="stat"><div class="stat-label">Fournisseurs</div><div class="stat-val">${total}</div><div class="stat-sub">au catalogue</div></div>
+    <div class="stat"><div class="stat-label">Actifs</div><div class="stat-val">${actifs}</div><div class="stat-sub">${DB.filter(f=>f.statut==='En révision').length} en révision</div></div>
+    <div class="stat"><div class="stat-label">Affichés</div><div class="stat-val">${list.length}</div><div class="stat-sub">après filtre</div></div>
+    <div class="stat"><div class="stat-label">Note moy.</div><div class="stat-val">${avg}</div><div class="stat-sub">${noted.length} noté${noted.length>1?'s':''}</div></div>
+    <div class="stat"><div class="stat-label">Pays</div><div class="stat-val">${pays}</div><div class="stat-sub">différents</div></div>
+  `;
+}
+
+/* ═══ RENDER CHIPS PAYS ═══ */
+function renderChips(){
+  const pays=[...new Set(DB.filter(f=>f.pays).map(f=>f.pays))].sort();
+  document.getElementById('chips').innerHTML=
+    [['','Tous'],...pays.map(p=>[p,p])].map(([v,l])=>
+      `<button class="chip${activeCountry===v?' active':''}" onclick="setCountry('${v.replace(/'/g,"\\'")}')">${l}</button>`
+    ).join('');
+}
+function setCountry(c){activeCountry=c;render()}
+
+/* ═══ RENDER GRID ═══ */
+function renderGrid(list){
+  const g=document.getElementById('grid');
+  if(!list.length){g.innerHTML=`<div class="empty">${ico.star}<p>Aucun fournisseur trouvé</p></div>`;return}
+  g.innerHTML=list.map(f=>{
+    const p=pal(f.nom);
+    const isPinned=pinned.has(f.id);
+    const dm=domain(f.site);
+    const tags=(f.tags||[]).slice(0,2);
+    const extraTags=(f.tags||[]).length>2?`<span class="tag">+${f.tags.length-2}</span>`:'';
+    return `<article class="card" onclick="openDetail(${f.id})" role="button" tabindex="0" onkeydown="if(event.key==='Enter')openDetail(${f.id})">
+      <button class="card-pin${isPinned?' pinned':''}" onclick="event.stopPropagation();togglePin(${f.id})" title="${isPinned?'Désépingler':'Épingler'}">${ico.pin2}</button>
+      <div class="card-head">
+        <div class="avatar" style="background:${p.bg};color:${p.c}">${ini(f.nom)}</div>
+        <div class="card-info">
+          <div class="card-name">${f.nom}</div>
+          <div class="card-cat">${f.categorie||f.pays||'—'}</div>
+        </div>
+        ${badge(f.statut)}
+      </div>
+      <div class="card-rows">
+        ${f.contact?`<div class="card-row">${ico.user}<span>${f.contact}</span></div>`:''}
+        ${f.email?`<div class="card-row">${ico.mail}<a href="mailto:${f.email.split('/')[0].trim()}" onclick="event.stopPropagation()">${f.email.split('/')[0].trim()}</a></div>`:''}
+        ${f.tel?`<div class="card-row">${ico.phone}<span>${f.tel.split('/')[0].trim()}</span></div>`:''}
+        ${dm?`<div class="card-row">${ico.globe}<a href="${f.site}" target="_blank" onclick="event.stopPropagation()">${dm}</a></div>`:''}
+        ${f.delai?`<div class="card-row">${ico.clock}<span>Délai : ${f.delai} j</span></div>`:f.pays?`<div class="card-row">${ico.pin}<span>${f.pays}</span></div>`:''}
+      </div>
+      <div class="card-footer">
+        <div class="tags">${tags.map(t=>`<span class="tag">${t}</span>`).join('')}${extraTags}</div>
+        <div class="stars-row">${[1,2,3,4,5].map(i=>`<button class="star-btn${i<=(f.note||0)?' on':''}" onclick="event.stopPropagation();rateCard(${f.id},${i})" title="${i} étoile${i>1?'s':''}">★</button>`).join('')}</div>
+      </div>
+    </article>`;
+  }).join('');
+}
+
+/* ═══ RATE depuis la carte ═══ */
+function rateCard(id,n){
+  const f=DB.find(x=>x.id===id);if(!f)return;
+  f.note=f.note===n?0:n;
+  render();
+  pushUpdate(f).then(()=>{
+    toast(`${f.nom} : ${f.note?f.note+'/5 ⭐':'note retirée'}`,'success');
+  });
+}
+
+/* ═══ TOGGLE PIN ═══ */
+function togglePin(id){
+  if(pinned.has(id))pinned.delete(id);else pinned.add(id);
+  render();
+}
+
+/* ═══ RENDER PRINCIPAL ═══ */
+function render(){
+  const list=getFiltered();
+  renderStats(list);
+  renderChips();
+  renderGrid(list);
+}
+
+/* ═══ VUE ═══ */
+function setView(v){
+  currentView=v;
+  document.getElementById('container').className=v==='list'?'list-view':'';
+  document.getElementById('btn-grid').className='view-btn'+(v==='grid'?' active':'');
+  document.getElementById('btn-list').className='view-btn'+(v==='list'?' active':'');
+}
+
+/* ═══ SEARCH ═══ */
+function onSearch(el){
+  document.getElementById('search-clear').className='search-clear'+(el.value?' visible':'');
+  render();
+}
+function clearSearch(){
+  document.getElementById('search').value='';
+  document.getElementById('search-clear').className='search-clear';
+  render();
+}
+
+/* ═══ MODAL DÉTAIL ═══ */
+function openDetail(id){
+  const f=DB.find(x=>x.id===id);if(!f)return;
+  const p=pal(f.nom);
+  const dm=domain(f.site);
+  document.getElementById('modal-body').innerHTML=`
+    <button class="modal-close" onclick="closeOverlay()" aria-label="Fermer">${ico.x}</button>
+    <div class="modal-head">
+      <div class="modal-avatar" style="background:${p.bg};color:${p.c};font-size:20px;font-weight:800">${ini(f.nom)}</div>
+      <div>
+        <div class="modal-name">${f.nom}</div>
+        <div class="modal-sub">${badge(f.statut)} ${f.categorie?`<span>${f.categorie}</span>`:''} ${f.pays?`<span>${f.pays}</span>`:''}</div>
+      </div>
+    </div>
+    ${f.commentaire?`<div style="background:var(--amber-bg);border-radius:8px;padding:10px 12px;font-size:13px;color:var(--amber);margin-bottom:4px;line-height:1.5">💬 ${f.commentaire}</div>`:''}
+
+    <div class="section-title">Contact commercial</div>
+    <div class="detail-list">
+      ${f.contact?`<div class="detail-row">${ico.user}<span class="detail-key">Nom / poste</span><span class="detail-val">${f.contact}</span></div>`:''}
+      ${f.email?`<div class="detail-row">${ico.mail}<span class="detail-key">Email</span><span class="detail-val"><a href="mailto:${f.email.split('/')[0].trim()}">${f.email}</a></span></div>`:''}
+      ${f.tel?`<div class="detail-row">${ico.phone}<span class="detail-key">Téléphone</span><span class="detail-val">${f.tel}</span></div>`:''}
+      ${f.site?`<div class="detail-row">${ico.globe}<span class="detail-key">Site web</span><span class="detail-val"><a href="${f.site}" target="_blank">${dm} ↗</a></span></div>`:''}
+      ${(f.adresse||f.cp_ville)?`<div class="detail-row">${ico.pin}<span class="detail-key">Adresse</span><span class="detail-val">${[f.adresse,f.cp_ville].filter(Boolean).join(', ')}</span></div>`:''}
+    </div>
+
+    <div class="section-title">Conditions commerciales</div>
+    <div class="detail-list">
+      ${f.delai?`<div class="detail-row">${ico.clock}<span class="detail-key">Délai livraison</span><span class="detail-val">${f.delai} jours</span></div>`:''}
+      ${f.paiement?`<div class="detail-row">${ico.coin}<span class="detail-key">Paiement</span><span class="detail-val">${f.paiement}</span></div>`:''}
+    </div>
+
+    <div class="section-title">Évaluation</div>
+    <div class="detail-list">
+      <div class="detail-row">${ico.star}<span class="detail-key">Note</span>
+        <span class="detail-val">
+          <div class="stars-edit">${[1,2,3,4,5].map(i=>`<button class="star-edit${i<=(f.note||0)?' on':''}" onclick="quickRate(${f.id},${i})">★</button>`).join('')}
+          <span style="font-size:12px;color:var(--text3);margin-left:4px" id="note-label-${f.id}">${f.note?f.note+'/5':''}</span></div>
+        </span>
+      </div>
+      ${(f.tags||[]).length?`<div class="detail-row">${ico.tag}<span class="detail-key">Mots-clés</span><span class="detail-val"><div class="tags">${(f.tags||[]).map(t=>`<span class="tag">${t}</span>`).join('')}</div></span></div>`:''}
+    </div>
+
+    <div class="modal-actions">
+      <button class="btn btn-primary" onclick="openEdit(${f.id})">${ico.edit} Modifier</button>
+      <button class="btn btn-ghost ml-auto" onclick="askDelete(${f.id})">${ico.trash} Supprimer</button>
+    </div>
+  `;
+  document.getElementById('overlay').classList.add('open');
+}
+
+function quickRate(id,n){
+  const f=DB.find(x=>x.id===id);if(!f)return;
+  f.note=f.note===n?0:n;
+  document.querySelectorAll('.star-edit').forEach((btn,i)=>btn.classList.toggle('on',i<f.note));
+  const lbl=document.getElementById('note-label-'+id);
+  if(lbl)lbl.textContent=f.note?f.note+'/5':'';
+  render();
+  pushUpdate(f);
+}
+
+/* ═══ MODAL EDIT / ADD ═══ */
+function openEdit(id){
+  const f=DB.find(x=>x.id===id);
+  editingNote=f.note||0;
+  editingTags=[...(f.tags||[])];
+  document.getElementById('modal-body').innerHTML=formHtml(f);
+}
+function openAdd(){
+  editingNote=0;editingTags=[];
+  document.getElementById('modal-body').innerHTML=formHtml(null);
+  document.getElementById('overlay').classList.add('open');
+}
+
+function formHtml(f){
+  const isNew=!f;
+  return `
+    <button class="modal-close" onclick="closeOverlay()" aria-label="Fermer">${ico.x}</button>
+    <div class="modal-head">
+      <div class="modal-avatar" style="background:var(--navy2);color:#fff;font-size:18px">${isNew?'+':ini(f.nom)}</div>
+      <div><div class="modal-name">${isNew?'Nouveau fournisseur':'Modifier la fiche'}</div><div class="modal-sub" style="margin-top:4px">${isNew?'Remplissez les informations ci-dessous':f.nom}</div></div>
+    </div>
+    <div class="form-grid">
+      <div class="form-group form-full">
+        <label class="form-label">Nom du fournisseur <span>*</span></label>
+        <input class="form-input" id="f-nom" type="text" value="${e(f?.nom)}" placeholder="ex : ACIER EXPRESS" required>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Catégorie</label>
+        <input class="form-input" id="f-cat" type="text" value="${e(f?.categorie)}" placeholder="ex : Métaux, Textiles…">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Statut</label>
+        <select class="form-select" id="f-statut">
+          ${['Actif','En révision','Inactif'].map(s=>`<option${(f?.statut||'Actif')===s?' selected':''}>${s}</option>`).join('')}
+        </select>
+      </div>
+
+      <div class="form-group form-full" style="border-top:1px solid var(--border);padding-top:10px;margin-top:2px">
+        <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Contact commercial</div>
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Nom & poste du commercial</label>
+        <input class="form-input" id="f-contact" type="text" value="${e(f?.contact)}" placeholder="ex : Marie Dupont – Commerciale">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Email</label>
+        <input class="form-input" id="f-email" type="email" value="${e(f?.email)}" placeholder="contact@exemple.fr">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Téléphone</label>
+        <input class="form-input" id="f-tel" type="text" value="${e(f?.tel)}" placeholder="04 XX XX XX XX">
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Site internet</label>
+        <input class="form-input" id="f-site" type="text" value="${e(f?.site)}" placeholder="https://www.exemple.fr">
+      </div>
+
+      <div class="form-group form-full" style="border-top:1px solid var(--border);padding-top:10px;margin-top:2px">
+        <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Localisation & conditions</div>
+      </div>
+      <div class="form-group">
+        <label class="form-label">Pays</label>
+        <input class="form-input" id="f-pays" type="text" value="${e(f?.pays)}" placeholder="France">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Délai de livraison (jours)</label>
+        <input class="form-input" id="f-delai" type="number" value="${f?.delai||''}" placeholder="30" min="0">
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Adresse</label>
+        <input class="form-input" id="f-adresse" type="text" value="${e(f?.adresse)}" placeholder="Rue, ZI…">
+      </div>
+      <div class="form-group">
+        <label class="form-label">CP / Ville</label>
+        <input class="form-input" id="f-cp" type="text" value="${e(f?.cp_ville)}" placeholder="69000 Lyon">
+      </div>
+      <div class="form-group">
+        <label class="form-label">Conditions de paiement</label>
+        <input class="form-input" id="f-paiement" type="text" value="${e(f?.paiement)}" placeholder="Virement 30 jours…">
+      </div>
+
+      <div class="form-group form-full" style="border-top:1px solid var(--border);padding-top:10px;margin-top:2px">
+        <div style="font-size:12px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px">Évaluation & mots-clés</div>
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Note</label>
+        <div class="stars-edit" id="star-edit-wrap">
+          ${[1,2,3,4,5].map(i=>`<button type="button" class="star-edit${i<=editingNote?' on':''}" onclick="setFormNote(${i})">★</button>`).join('')}
+          <span id="note-form-label" style="font-size:13px;color:var(--text3);margin-left:6px">${editingNote?editingNote+'/5':''}</span>
+        </div>
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Mots-clés <span style="font-weight:400;color:var(--text3)">(Entrée ou virgule pour ajouter)</span></label>
+        <div class="tag-input-wrap" id="tag-wrap" onclick="document.getElementById('tag-input').focus()">
+          ${editingTags.map(t=>`<span class="tag" onclick="removeTag('${t}')">${t} ×</span>`).join('')}
+          <input class="tag-input" id="tag-input" placeholder="${editingTags.length?'':'ex : acier, visserie…'}" onkeydown="tagKey(event)">
+        </div>
+      </div>
+      <div class="form-group form-full">
+        <label class="form-label">Commentaire interne</label>
+        <textarea class="form-textarea comment-box" id="f-comment" placeholder="Notes internes, historique, points d'attention…">${e(f?.commentaire)}</textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-gold" onclick="saveForm(${f?f.id:'null'})">${ico.edit} ${isNew?'Créer le fournisseur':'Enregistrer'}</button>
+      <button class="btn btn-ghost" onclick="${f?`openDetail(${f.id})`:'closeOverlay()'}" style="margin-left:auto">Annuler</button>
+    </div>
+  `;
+}
+
+function e(v){return(v||'').replace(/"/g,'&quot;')}
+
+function setFormNote(n){
+  editingNote=editingNote===n?0:n;
+  document.querySelectorAll('#star-edit-wrap .star-edit').forEach((b,i)=>b.classList.toggle('on',i<editingNote));
+  document.getElementById('note-form-label').textContent=editingNote?editingNote+'/5':'';
+}
+
+function tagKey(ev){
+  if(ev.key==='Enter'||ev.key===','||ev.key===';'){
+    ev.preventDefault();
+    const v=ev.target.value.replace(/,|;/g,'').trim();
+    if(v&&!editingTags.includes(v)){editingTags.push(v);refreshTagWrap();ev.target.value=''}
+  }
+  if(ev.key==='Backspace'&&!ev.target.value.length&&editingTags.length){
+    editingTags.pop();refreshTagWrap();
+  }
+}
+function removeTag(t){editingTags=editingTags.filter(x=>x!==t);refreshTagWrap()}
+function refreshTagWrap(){
+  document.getElementById('tag-wrap').innerHTML=
+    editingTags.map(t=>`<span class="tag" onclick="removeTag('${t}')">${t} ×</span>`).join('')+
+    `<input class="tag-input" id="tag-input" placeholder="${editingTags.length?'':'ex : acier…'}" onkeydown="tagKey(event)">`;
+  document.getElementById('tag-input').focus();
+}
+
+function saveForm(id){
+  const nom=document.getElementById('f-nom').value.trim();
+  if(!nom){toast('Le nom est obligatoire','error');document.getElementById('f-nom').focus();return}
+  const data={
+    nom,categorie:v('f-cat'),statut:v('f-statut'),
+    contact:v('f-contact'),email:v('f-email'),tel:v('f-tel'),site:v('f-site'),
+    pays:v('f-pays'),delai:parseInt(v('f-delai'))||null,
+    adresse:v('f-adresse'),cp_ville:v('f-cp'),paiement:v('f-paiement'),
+    note:editingNote,tags:[...editingTags],commentaire:v('f-comment'),
+  };
+  if(id){
+    const existing=DB.find(f=>f.id===id);
+    Object.assign(existing,data);
+    closeOverlay();render();
+    pushUpdate(existing).then(()=>toast('Fiche mise à jour !','success'));
+  }else{
+    closeOverlay();
+    showSavingPill(true);
+    pushAdd(data).then(res=>{
+      showSavingPill(false);
+      if(res&&res.success){
+        data.id=nextId++;
+        data.rowIndex=res.rowIndex;
+        DB.push(data);render();
+        toast('Fournisseur ajouté !','success');
+      }else{
+        toast("Échec de l'ajout — vérifiez la connexion","error");
+      }
+    });
+  }
+}
+function v(id){return(document.getElementById(id)||{}).value||''}
+
+/* ═══ DELETE ═══ */
+function askDelete(id){
+  const f=DB.find(x=>x.id===id);if(!f)return;
+  document.getElementById('confirm-msg').textContent=`Supprimer définitivement "${f.nom}" ? Cette action est irréversible.`;
+  document.getElementById('confirm-ok').onclick=()=>{doDelete(id)};
+  closeOverlay();
+  document.getElementById('confirm-overlay').classList.add('open');
+}
+function doDelete(id){
+  const f=DB.find(x=>x.id===id);
+  closeConfirm();
+  showSavingPill(true);
+  pushDelete(f).then(res=>{
+    showSavingPill(false);
+    if(res&&res.success){
+      DB=DB.filter(x=>x.id!==id);
+      pinned.delete(id);
+      render();
+      toast('Fournisseur supprimé','error');
+    }else{
+      toast('Échec de la suppression — vérifiez la connexion','error');
+    }
+  });
+}
+function closeConfirm(){document.getElementById('confirm-overlay').classList.remove('open')}
+
+/* ═══ OVERLAY ═══ */
+function closeOverlay(){document.getElementById('overlay').classList.remove('open')}
+function onOverlayClick(e){if(e.target===document.getElementById('overlay'))closeOverlay()}
+document.addEventListener('keydown',e=>{if(e.key==='Escape'){closeOverlay();closeConfirm()}});
+
+/* ═══ TOAST ═══ */
+function toast(msg,type=''){
+  const el=document.createElement('div');
+  el.className='toast'+(type?' '+type:'');
+  el.textContent=msg;
+  document.getElementById('toasts').appendChild(el);
+  setTimeout(()=>el.remove(),3500);
+}
+
+/* ═══ EXPORT (sauvegarde locale de secours) ═══ */
+function exportJSON(){
+  const blob=new Blob([JSON.stringify(DB,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);
+  a.download=`catalogue-fournisseurs-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();toast('Export téléchargé !','success');
+}
+
+/* ═══════════════════════════════════════════════════
+   SYNCHRONISATION GOOGLE SHEETS
+   Le Google Sheet est la source de vérité unique.
+   Lecture (GET) au chargement + rafraîchissement périodique.
+   Écriture (POST) à chaque ajout/modification/suppression.
+═══════════════════════════════════════════════════ */
+
+function setSyncStatus(state, label){
+  const el = document.getElementById('sync-status');
+  if(!el) return;
+  el.className = 'sync-status sync-' + state;
+  el.querySelector('.sync-label').textContent = label;
+}
+
+function showSavingPill(show){
+  const el = document.getElementById('saving-pill');
+  if(el) el.classList.toggle('show', show);
+}
+
+function showConfigBanner(){
+  const wrap = document.getElementById('config-banner-wrap');
+  if(!wrap) return;
+  wrap.innerHTML = `
+    <div class="config-banner">
+      ⚙️ <strong>Connexion à Google Sheets non configurée.</strong>
+      Suivez les instructions du fichier <code>apps-script-catalogue-fournisseurs.gs</code>,
+      puis remplacez la valeur de <code>API_URL</code> en haut du script de ce fichier HTML
+      par l'URL de votre déploiement Apps Script.
+      En attendant, le catalogue fonctionne hors-ligne et vos modifications ne seront pas partagées.
+    </div>`;
+}
+
+function renderSkeleton(){
+  const g = document.getElementById('grid');
+  g.innerHTML = Array.from({length:8}).map(()=>`
+    <div class="skeleton-card">
+      <div class="skeleton-line" style="width:42px;height:42px;border-radius:9px;margin-bottom:12px"></div>
+      <div class="skeleton-line" style="width:70%;height:14px;margin-bottom:8px"></div>
+      <div class="skeleton-line" style="width:50%;height:11px;margin-bottom:18px"></div>
+      <div class="skeleton-line" style="width:90%;height:11px;margin-bottom:6px"></div>
+      <div class="skeleton-line" style="width:80%;height:11px;margin-bottom:6px"></div>
+      <div class="skeleton-line" style="width:60%;height:11px"></div>
+    </div>`).join('');
+}
+
+/**
+ * Charge les fournisseurs depuis le Google Sheet.
+ */
+async function fetchSuppliers(){
+  if(!isConfigured){
+    showConfigBanner();
+    setSyncStatus('error','Non configuré');
+    isLoading=false;
+    render();
+    return;
+  }
+  try{
+    setSyncStatus('loading','Connexion…');
+    const res = await fetch(API_URL, {method:'GET'});
+    const json = await res.json();
+    if(!json.success) throw new Error(json.error||'Erreur inconnue');
+    DB = json.fournisseurs.map((f,i)=>({...f, id:i+1}));
+    nextId = DB.length + 1;
+    isLoading=false;
+    setSyncStatus('ok','Synchronisé');
+    render();
+  }catch(err){
+    console.error(err);
+    setSyncStatus('error','Hors-ligne');
+    isLoading=false;
+    if(DB.length===0){
+      document.getElementById('grid').innerHTML = `
+        <div class="empty">
+          ${ico.x}
+          <p>Impossible de joindre le Google Sheet.<br>Vérifiez votre connexion ou l'URL configurée.</p>
+        </div>`;
+    }
+    toast("Connexion au Sheet impossible — données non chargées", "error");
+  }
+}
+
+/**
+ * Envoie une action au script Apps Script (ajout, modif, suppression).
+ */
+async function callApi(action, data){
+  if(!isConfigured){
+    toast("Connexion non configurée — modification non enregistrée", "error");
+    return {success:false};
+  }
+  try{
+    const res = await fetch(API_URL, {
+      method:'POST',
+      headers:{'Content-Type':'text/plain;charset=utf-8'}, // évite le preflight CORS
+      body: JSON.stringify({action, data}),
+    });
+    const json = await res.json();
+    if(!json.success){
+      toast(json.error || "Erreur lors de l'enregistrement", "error");
+    }
+    return json;
+  }catch(err){
+    console.error(err);
+    toast("Connexion impossible — modification non enregistrée", "error");
+    return {success:false};
+  }
+}
+
+function pushUpdate(f){
+  showSavingPill(true);
+  return callApi('update', f).finally(()=>showSavingPill(false));
+}
+function pushAdd(data){
+  return callApi('add', data);
+}
+function pushDelete(f){
+  return callApi('delete', f);
+}
+
+/**
+ * Rafraîchissement manuel (bouton dans le header).
+ */
+function manualRefresh(){
+  toast('Actualisation en cours…');
+  fetchSuppliers();
+}
+
+/**
+ * Rafraîchissement automatique léger toutes les 60 secondes,
+ * pour refléter les modifications faites par d'autres collègues.
+ * Ne s'exécute que si aucune fenêtre modale n'est ouverte (pour ne
+ * pas perturber une saisie en cours).
+ */
+setInterval(()=>{
+  const overlayOpen = document.getElementById('overlay').classList.contains('open');
+  if(!overlayOpen && isConfigured) fetchSuppliers();
+}, 60000);
+
+/* ═══ INITIALISATION ═══ */
+renderSkeleton();
+fetchSuppliers();
+</script>
+</body>
+</html>
