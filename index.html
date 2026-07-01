@@ -296,6 +296,7 @@ select{height:38px;padding:0 12px;cursor:pointer}
       <option value="nom">A → Z</option>
       <option value="note">Mieux notés</option>
       <option value="pays">Par pays</option>
+      <option value="tags">Par tags</option>
       <option value="delai">Délai croissant</option>
       <option value="pinned">Épinglés d'abord</option>
     </select>
@@ -316,7 +317,7 @@ select{height:38px;padding:0 12px;cursor:pointer}
   </div>
 
   <div class="chips-wrap">
-    <span class="chips-label">Pays :</span>
+    <span class="chips-label">Tags :</span>
     <div id="chips" style="display:flex;gap:6px;flex-wrap:wrap"></div>
   </div>
 
@@ -367,7 +368,7 @@ const API_URL = "https://script.google.com/macros/s/AKfycbx58XG3pg4KIv9W04U8n3Cb
 let DB = [];
 let pinned = new Set();
 let currentView = 'grid';
-let activeCountry = '';
+let activeTag = '';
 let editingNote = 0;
 let editingTags = [];
 let nextId = 1;
@@ -416,14 +417,15 @@ function getFiltered(){
   const srt=document.getElementById('sort').value;
   const st=document.getElementById('filtre-statut').value;
   let list=DB.filter(f=>{
-    const mC=!activeCountry||f.pays===activeCountry;
+    const mT=!activeTag||(f.tags||[]).some(t=>t.toLowerCase()===activeTag.toLowerCase());
     const mS=!st||f.statut===st;
     const mQ=!q||[f.nom,f.contact,f.email,f.tel,f.pays,f.categorie,f.paiement,...(f.tags||[])].some(x=>(x||'').toLowerCase().includes(q));
-    return mC&&mS&&mQ;
+    return mT&&mS&&mQ;
   });
   if(srt==='nom')list.sort((a,b)=>a.nom.localeCompare(b.nom));
   else if(srt==='note')list.sort((a,b)=>(b.note||0)-(a.note||0)||a.nom.localeCompare(b.nom));
   else if(srt==='pays')list.sort((a,b)=>(a.pays||'').localeCompare(b.pays||'')||a.nom.localeCompare(b.nom));
+  else if(srt==='tags')list.sort((a,b)=>((a.tags||[])[0]||'').localeCompare((b.tags||[])[0]||'')||a.nom.localeCompare(b.nom));
   else if(srt==='delai')list.sort((a,b)=>(a.delai||9999)-(b.delai||9999));
   else if(srt==='pinned')list.sort((a,b)=>(pinned.has(b.id)?1:0)-(pinned.has(a.id)?1:0)||a.nom.localeCompare(b.nom));
   return list;
@@ -447,13 +449,20 @@ function renderStats(list){
 
 /* ═══ RENDER CHIPS PAYS ═══ */
 function renderChips(){
-  const pays=[...new Set(DB.filter(f=>f.pays).map(f=>f.pays))].sort();
+  // Collecte tous les tags uniques de tous les fournisseurs, triés par fréquence
+  const tagCount={};
+  DB.forEach(f=>(f.tags||[]).forEach(t=>{
+    if(!t)return;
+    const k=t.toLowerCase();
+    tagCount[k]=(tagCount[k]||0)+1;
+  }));
+  const tags=Object.keys(tagCount).sort((a,b)=>tagCount[b]-tagCount[a]);
   document.getElementById('chips').innerHTML=
-    [['','Tous'],...pays.map(p=>[p,p])].map(([v,l])=>
-      `<button class="chip${activeCountry===v?' active':''}" onclick="setCountry('${v.replace(/'/g,"\\'")}')">${l}</button>`
+    [['','Tous'],...tags.map(t=>[t,t])].map(([v,l])=>
+      `<button class="chip${activeTag===v?' active':''}" onclick="setTag('${v.replace(/'/g,"\\'")}')">${v?getCatIcon({nom:'',tags:[v]})+' ':''} ${l}</button>`
     ).join('');
 }
-function setCountry(c){activeCountry=c;render()}
+function setTag(t){activeTag=t;render()}
 
 /* ═══ RENDER GRID ═══ */
 function renderGrid(list){
