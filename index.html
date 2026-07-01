@@ -194,6 +194,51 @@ select{height:38px;padding:0 12px;cursor:pointer}
 .confirm-msg{font-size:14px;color:var(--text2);margin-bottom:1.25rem;line-height:1.6}
 .confirm-actions{display:flex;gap:8px;justify-content:flex-end}
 
+/* ── CATÉGORIE ICÔNE ── */
+.cat-icon{font-size:18px;line-height:1}
+.card-cat-wrap{display:flex;align-items:center;gap:5px}
+/* ── BADGES SPÉCIAUX ── */
+.badge-new{background:linear-gradient(135deg,#22c55e,#16a34a);color:#fff;font-size:10px;padding:2px 7px;border-radius:12px;font-weight:700;letter-spacing:.03em;animation:fadeIn .4s ease}
+.badge-top{background:linear-gradient(135deg,var(--gold),#b8860b);color:#fff;font-size:10px;padding:2px 7px;border-radius:12px;font-weight:700}
+@keyframes fadeIn{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+/* ── TOP RATED ── */
+.card.top-rated{border-color:var(--gold);box-shadow:0 0 0 1px var(--gold),var(--shadow)}
+.card.top-rated:hover{box-shadow:0 0 0 2px var(--gold),var(--shadow)}
+/* ── DATE MODIF ── */
+.card-date{font-size:10px;color:var(--text3);margin-top:4px;display:flex;align-items:center;gap:4px}
+/* ── FIL ACTIVITE ── */
+.activity-wrap{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:.85rem 1rem;margin-bottom:1.25rem;display:flex;align-items:flex-start;gap:12px}
+.activity-title{font-size:11px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.activity-list{display:flex;flex-direction:column;gap:4px;flex:1;min-width:0}
+.activity-item{font-size:12.5px;color:var(--text2);display:flex;align-items:center;gap:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.activity-item strong{color:var(--text);font-weight:600}
+.activity-item .atime{color:var(--text3);font-size:11px;flex-shrink:0;margin-left:auto}
+/* ── COMPARAISON BAR ── */
+.compare-bar{position:fixed;bottom:0;left:0;right:0;background:var(--navy);color:#fff;padding:.75rem 1.5rem;display:flex;align-items:center;gap:12px;z-index:100;transform:translateY(100%);transition:transform .25s ease;box-shadow:0 -4px 20px rgba(0,0,0,.2)}
+.compare-bar.visible{transform:translateY(0)}
+.compare-items{display:flex;gap:8px;flex:1;flex-wrap:wrap}
+.compare-chip{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.25);border-radius:20px;padding:4px 10px;font-size:12px;display:flex;align-items:center;gap:6px}
+.compare-chip button{background:none;border:none;color:rgba(255,255,255,.7);cursor:pointer;font-size:14px;line-height:1;padding:0}
+.btn-compare{height:34px;padding:0 16px;border-radius:8px;border:none;background:var(--gold);color:var(--navy);font-size:13px;font-weight:700;cursor:pointer;white-space:nowrap}
+.btn-compare-clear{height:34px;padding:0 12px;border-radius:8px;border:1px solid rgba(255,255,255,.25);background:none;color:rgba(255,255,255,.7);font-size:13px;cursor:pointer}
+/* ── COMPARE MODAL ── */
+.compare-modal{background:var(--surface);border-radius:18px;width:100%;max-width:900px;box-shadow:var(--shadow2);position:relative;overflow:hidden}
+.compare-grid{display:grid;gap:0}
+.compare-col{padding:1rem 1.25rem;border-right:1px solid var(--border)}
+.compare-col:last-child{border-right:none}
+.compare-col-head{display:flex;align-items:center;gap:10px;margin-bottom:1rem;padding-bottom:1rem;border-bottom:1px solid var(--border)}
+.compare-row{padding:8px 0;border-bottom:1px solid var(--border);font-size:13px}
+.compare-row:last-child{border-bottom:none}
+.compare-row-label{font-size:10px;font-weight:700;color:var(--text3);text-transform:uppercase;letter-spacing:.05em;margin-bottom:2px}
+.compare-row-val{color:var(--text)}
+.compare-highlight{color:var(--green);font-weight:600}
+/* ── COMPARE BTN CARD ── */
+.card-compare-btn{position:absolute;bottom:44px;right:10px;width:22px;height:22px;border-radius:6px;background:none;border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;color:var(--text3);opacity:0;transition:opacity .15s,background .12s;font-size:11px}
+.card:hover .card-compare-btn{opacity:1}
+.card-compare-btn.selected,.card-compare-btn.selected:hover{opacity:1;background:var(--navy2);color:#fff;border-color:var(--navy2)}
+/* ── ANIM CARTE ── */
+.card{animation:cardIn .25s ease both}
+@keyframes cardIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 /* ── RESPONSIVE ── */
 @media(max-width:720px){
   .stats{grid-template-columns:repeat(2,1fr)}
@@ -236,6 +281,7 @@ select{height:38px;padding:0 12px;cursor:pointer}
 
 <main class="main">
   <div id="config-banner-wrap"></div>
+  <div id="activity-wrap-container"></div>
   <div class="stats" id="stats"></div>
 
   <div class="toolbar">
@@ -902,8 +948,295 @@ setInterval(()=>{
 }, 60000);
 
 /* ═══ INITIALISATION ═══ */
+
+/* ═══ ICÔNES CATÉGORIES ═══ */
+const CAT_ICONS = {
+  'métal':'⚙️','acier':'⚙️','alumin':'⚙️','inox':'⚙️','tôl':'🔩','découp':'🔩',
+  'bois':'🪵','menuiser':'🪵','gedibois':'🪵','wood':'🪵',
+  'verre':'🪟','vitrage':'🪟','miroir':'🪟','glass':'🪟',
+  'textile':'🧵','sellerie':'🧵','tissu':'🧵','moquette':'🧵','tapisserie':'🧵','mousse':'🧵',
+  'led':'💡','lumière':'💡','éclairag':'💡','électr':'💡','câbl':'💡','prises':'💡',
+  'transport':'🚚','logistique':'🚚','livraison':'🚚','fret':'🚚','ziegler':'🚚','schenker':'🚚','kuehne':'🚚','skillfret':'🚚',
+  'emball':'📦','carton':'📦','raja':'📦','parembal':'📦',
+  'composit':'🏗️','plastique':'🏗️','polymère':'🏗️','profil':'🏗️',
+  'peinture':'🎨','finition':'🎨','coloris':'🎨','adezif':'🎨','colle':'🎨',
+  'vis':'🔧','fixation':'🔧','bossard':'🔧','rivets':'🔧','écrous':'🔧',
+  'informatique':'💻','ldlc':'💻','électronique':'💻','mouser':'💻','conrad':'💻',
+  'verre':'🪟','vitrage':'🪟',
+};
+function getCatIcon(f){
+  const text=(f.nom+' '+(f.categorie||'')+' '+(f.tags||[]).join(' ')).toLowerCase();
+  for(const [k,v] of Object.entries(CAT_ICONS)){if(text.includes(k))return v;}
+  return '🏭';
+}
+
+/* ═══ DATE HELPERS ═══ */
+function fmtDate(iso){
+  if(!iso)return'';
+  try{
+    const d=new Date(iso);
+    return d.toLocaleDateString('fr-FR',{day:'2-digit',month:'2-digit',year:'numeric'});
+  }catch(e){return'';}
+}
+function relativeDate(iso){
+  if(!iso)return'';
+  try{
+    const diff=Date.now()-new Date(iso).getTime();
+    const days=Math.floor(diff/86400000);
+    if(days===0)return"Aujourd'hui";
+    if(days===1)return'Hier';
+    if(days<7)return`Il y a ${days}j`;
+    return fmtDate(iso);
+  }catch(e){return'';}
+}
+function isNew(iso){
+  if(!iso)return false;
+  return Date.now()-new Date(iso).getTime()<7*86400000;
+}
+
+/* ═══ FIL D'ACTIVITÉ ═══ */
+function renderActivity(){
+  const wrap=document.getElementById('activity-wrap-container');
+  if(!wrap)return;
+  // Prend les 5 derniers fournisseurs modifiés ou ajoutés
+  const recent=[...DB]
+    .filter(f=>f.date_modif||f.date_ajout)
+    .sort((a,b)=>new Date(b.date_modif||b.date_ajout)-new Date(a.date_modif||a.date_ajout))
+    .slice(0,5);
+  if(!recent.length){wrap.innerHTML='';return;}
+  wrap.innerHTML=`
+    <div class="activity-wrap">
+      <div style="font-size:20px;flex-shrink:0">🕐</div>
+      <div style="flex:1;min-width:0">
+        <div class="activity-title">Activité récente</div>
+        <div class="activity-list">
+          ${recent.map(f=>`
+            <div class="activity-item">
+              <span>${getCatIcon(f)}</span>
+              <strong>${f.nom}</strong>
+              <span style="color:var(--text3)">${f.date_ajout&&!f.date_modif?'— ajouté':'— mis à jour'}</span>
+              <span class="atime">${relativeDate(f.date_modif||f.date_ajout)}</span>
+            </div>`).join('')}
+        </div>
+      </div>
+    </div>`;
+}
+
+/* ═══ PATCH renderGrid POUR NOUVELLES FEATURES ═══ */
+const _origRenderGrid = renderGrid;
+function renderGrid(list){
+  const g=document.getElementById('grid');
+  if(!list.length){g.innerHTML=`<div class="empty">${ico.star}<p>Aucun fournisseur trouvé</p></div>`;return;}
+  g.innerHTML=list.map((f,idx)=>{
+    const p=pal(f.nom);
+    const isPinned=pinned.has(f.id);
+    const isCompared=compareSet.has(f.id);
+    const dm=domain(f.site);
+    const tags=(f.tags||[]).slice(0,2);
+    const extraTags=(f.tags||[]).length>2?`<span class="tag">+${f.tags.length-2}</span>`:'';
+    const isTopRated=(f.note||0)>=4;
+    const isNewF=isNew(f.date_ajout);
+    const catIcon=getCatIcon(f);
+    const dateStr=relativeDate(f.date_modif||f.date_ajout);
+    return `<article class="card${isTopRated?' top-rated':''}" onclick="openDetail(${f.id})" role="button" tabindex="0"
+      onkeydown="if(event.key==='Enter')openDetail(${f.id})"
+      style="animation-delay:${Math.min(idx*0.03,0.3)}s">
+      <button class="card-pin${isPinned?' pinned':''}" onclick="event.stopPropagation();togglePin(${f.id})" title="${isPinned?'Désépingler':'Épingler'}">${ico.pin2}</button>
+      <button class="card-compare-btn${isCompared?' selected':''}" onclick="event.stopPropagation();toggleCompare(${f.id})" title="Comparer">⚖️</button>
+      <div class="card-head">
+        <div class="avatar" style="background:${p.bg};color:${p.c}">${ini(f.nom)}</div>
+        <div class="card-info">
+          <div class="card-name">${f.nom}</div>
+          <div class="card-cat-wrap">
+            <span class="cat-icon">${catIcon}</span>
+            <span class="card-cat">${f.categorie||f.pays||'—'}</span>
+          </div>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px;align-items:flex-end">
+          ${badge(f.statut)}
+          ${isNewF?'<span class="badge-new">🆕 Nouveau</span>':''}
+          ${isTopRated&&(f.note||0)>=4?'<span class="badge-top">⭐ Top</span>':''}
+        </div>
+      </div>
+      <div class="card-rows">
+        ${f.contact?`<div class="card-row">${ico.user}<span>${f.contact}</span></div>`:''}
+        ${f.email?`<div class="card-row">${ico.mail}<a href="mailto:${f.email.split('/')[0].trim()}" onclick="event.stopPropagation()">${f.email.split('/')[0].trim()}</a></div>`:''}
+        ${f.tel?`<div class="card-row">${ico.phone}<span>${f.tel.split('/')[0].trim()}</span></div>`:''}
+        ${dm?`<div class="card-row">${ico.globe}<a href="${f.site}" target="_blank" onclick="event.stopPropagation()">${dm}</a></div>`:''}
+        ${f.delai?`<div class="card-row">${ico.clock}<span>Délai : ${f.delai} j</span></div>`:f.pays?`<div class="card-row">${ico.pin}<span>${f.pays}</span></div>`:''}
+      </div>
+      <div class="card-footer">
+        <div class="tags">${tags.map(t=>`<span class="tag">${t}</span>`).join('')}${extraTags}</div>
+        <div class="stars-row">${[1,2,3,4,5].map(i=>`<button class="star-btn${i<=(f.note||0)?' on':''}" onclick="event.stopPropagation();rateCard(${f.id},${i})" title="${i} étoile${i>1?'s':''}">★</button>`).join('')}</div>
+      </div>
+      ${dateStr?`<div class="card-date"><span>${dateStr}</span></div>`:''}
+    </article>`;
+  }).join('');
+}
+
+/* ═══ PATCH render() POUR ACTIVITÉ ═══ */
+const _origRender = render;
+function render(){
+  const list=getFiltered();
+  renderStats(list);
+  renderChips();
+  renderGrid(list);
+  renderActivity();
+}
+
+/* ═══ COMPARAISON ═══ */
+let compareSet=new Set();
+function toggleCompare(id){
+  if(compareSet.has(id)){compareSet.delete(id);}
+  else if(compareSet.size>=3){toast('Maximum 3 fournisseurs à comparer','error');return;}
+  else{compareSet.add(id);}
+  updateCompareBar();
+  render();
+}
+function updateCompareBar(){
+  const bar=document.getElementById('compare-bar');
+  const items=document.getElementById('compare-items');
+  if(!bar||!items)return;
+  if(compareSet.size===0){bar.classList.remove('visible');return;}
+  bar.classList.add('visible');
+  items.innerHTML=[...compareSet].map(id=>{
+    const f=DB.find(x=>x.id===id);
+    return f?`<div class="compare-chip">${getCatIcon(f)} ${f.nom}<button onclick="toggleCompare(${id})">×</button></div>`:'';
+  }).join('');
+}
+function clearCompare(){compareSet.clear();updateCompareBar();render();}
+function openCompare(){
+  const fournisseurs=[...compareSet].map(id=>DB.find(x=>x.id===id)).filter(Boolean);
+  if(fournisseurs.length<2){toast('Sélectionnez au moins 2 fournisseurs','error');return;}
+  const cols=fournisseurs.length;
+  const rows=[
+    {label:'Statut',key:'statut',fmt:f=>badge(f.statut)},
+    {label:'Pays',key:'pays',fmt:f=>f.pays||'—'},
+    {label:'Contact',key:'contact',fmt:f=>f.contact||'—'},
+    {label:'Email',key:'email',fmt:f=>f.email?`<a href="mailto:${f.email.split('/')[0].trim()}">${f.email.split('/')[0].trim()}</a>`:'—'},
+    {label:'Téléphone',key:'tel',fmt:f=>f.tel||'—'},
+    {label:'Site web',key:'site',fmt:f=>f.site?`<a href="${f.site}" target="_blank">${domain(f.site)}</a>`:'—'},
+    {label:'Délai livraison',key:'delai',fmt:f=>f.delai?f.delai+' j':'—',best:'min'},
+    {label:'Paiement',key:'paiement',fmt:f=>f.paiement||'—'},
+    {label:'Note',key:'note',fmt:f=>f.note?'⭐'.repeat(f.note)+' '+f.note+'/5':'Non noté',best:'max'},
+    {label:'Tags',key:'tags',fmt:f=>(f.tags||[]).length?(f.tags||[]).map(t=>`<span class="tag">${t}</span>`).join(' '):'—'},
+    {label:'Commentaire',key:'commentaire',fmt:f=>f.commentaire||'—'},
+  ];
+  // Trouver les meilleures valeurs
+  const best={};
+  rows.forEach(r=>{
+    if(r.best==='min'){const vals=fournisseurs.map(f=>f[r.key]).filter(v=>v!=null&&v!=='');best[r.key]=Math.min(...vals);}
+    if(r.best==='max'){const vals=fournisseurs.map(f=>f[r.key]||0);best[r.key]=Math.max(...vals);}
+  });
+  document.getElementById('modal-body').innerHTML=`
+    <button class="modal-close" onclick="closeOverlay()" aria-label="Fermer">${ico.x}</button>
+    <div style="padding-bottom:1rem;border-bottom:1px solid var(--border);margin-bottom:1rem">
+      <div style="font-size:18px;font-weight:800">⚖️ Comparaison</div>
+      <div style="font-size:13px;color:var(--text3);margin-top:2px">${fournisseurs.length} fournisseurs</div>
+    </div>
+    <div class="compare-grid" style="grid-template-columns:repeat(${cols},1fr)">
+      ${fournisseurs.map(f=>{const p=pal(f.nom);return`
+        <div class="compare-col">
+          <div class="compare-col-head">
+            <div class="avatar" style="background:${p.bg};color:${p.c};width:36px;height:36px;border-radius:8px;font-size:13px">${ini(f.nom)}</div>
+            <div>
+              <div style="font-size:14px;font-weight:700">${f.nom}</div>
+              <div style="font-size:11px;color:var(--text3)">${getCatIcon(f)} ${f.categorie||f.pays||''}</div>
+            </div>
+          </div>
+          ${rows.map(r=>{
+            const val=f[r.key];
+            const isBest=(r.best==='min'&&val===best[r.key]&&val!=null)||(r.best==='max'&&val===best[r.key]&&val>0);
+            return`<div class="compare-row">
+              <div class="compare-row-label">${r.label}</div>
+              <div class="compare-row-val${isBest?' compare-highlight':''}">${r.fmt(f)}</div>
+            </div>`;
+          }).join('')}
+        </div>`}).join('')}
+    </div>`;
+  document.getElementById('overlay').classList.add('open');
+}
+
+/* ═══ PATCH fetchSuppliers POUR DATES ═══ */
+const _origFetch = fetchSuppliers;
+async function fetchSuppliers(){
+  if(!isConfigured){
+    showConfigBanner();
+    setSyncStatus('error','Non configuré');
+    isLoading=false;
+    render();
+    return;
+  }
+  try{
+    setSyncStatus('loading','Connexion…');
+    const res=await fetch(API_URL,{method:'GET'});
+    const json=await res.json();
+    if(!json.success)throw new Error(json.error||'Erreur inconnue');
+    DB=json.fournisseurs.map((f,i)=>({...f,id:i+1}));
+    nextId=DB.length+1;
+    isLoading=false;
+    setSyncStatus('ok','Synchronisé');
+    render();
+  }catch(err){
+    console.error(err);
+    setSyncStatus('error','Hors-ligne');
+    isLoading=false;
+    if(DB.length===0){
+      document.getElementById('grid').innerHTML=`<div class="empty">${ico.x}<p>Impossible de joindre le Google Sheet.<br>Vérifiez votre connexion ou l'URL configurée.</p></div>`;
+    }
+    toast('Connexion au Sheet impossible — données non chargées','error');
+  }
+}
+
+/* ═══ PATCH saveForm POUR DATES ═══ */
+const _origSaveForm = saveForm;
+function saveForm(id){
+  const nom=document.getElementById('f-nom').value.trim();
+  if(!nom){toast('Le nom est obligatoire','error');document.getElementById('f-nom').focus();return;}
+  const data={
+    nom,categorie:v('f-cat'),statut:v('f-statut'),
+    contact:v('f-contact'),email:v('f-email'),tel:v('f-tel'),site:v('f-site'),
+    pays:v('f-pays'),delai:parseInt(v('f-delai'))||null,
+    adresse:v('f-adresse'),cp_ville:v('f-cp'),paiement:v('f-paiement'),
+    note:editingNote,tags:[...editingTags],commentaire:v('f-comment'),
+  };
+  const now=new Date().toISOString();
+  if(id){
+    const existing=DB.find(f=>f.id===id);
+    data.date_ajout=existing.date_ajout||now;
+    data.date_modif=now;
+    Object.assign(existing,data);
+    closeOverlay();render();
+    pushUpdate(existing).then(()=>toast('Fiche mise à jour !','success'));
+  }else{
+    data.date_ajout=now;
+    data.date_modif=now;
+    closeOverlay();
+    showSavingPill(true);
+    pushAdd(data).then(res=>{
+      showSavingPill(false);
+      if(res&&res.success){
+        data.id=nextId++;
+        data.rowIndex=res.rowIndex;
+        DB.push(data);render();
+        toast('Fournisseur ajouté !','success');
+      }else{
+        toast("Échec de l'ajout — vérifiez la connexion","error");
+      }
+    });
+  }
+}
+
+
 renderSkeleton();
 fetchSuppliers();
 </script>
+<!-- Compare bar -->
+<div class="compare-bar" id="compare-bar">
+  <span style="font-size:13px;font-weight:600;white-space:nowrap">⚖️ Comparer</span>
+  <div class="compare-items" id="compare-items"></div>
+  <button class="btn-compare" onclick="openCompare()">Voir la comparaison</button>
+  <button class="btn-compare-clear" onclick="clearCompare()">Effacer</button>
+</div>
 </body>
 </html>
